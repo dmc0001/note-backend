@@ -1,8 +1,7 @@
 package com.example.model
 
-object NoteRepository {
+class NoteRepository {
     private val notes: MutableList<Note> = mutableListOf()
-
 
     fun getNotes(): List<Note> = notes
 
@@ -15,21 +14,32 @@ object NoteRepository {
         return null
     }
 
-    fun addNote(note: Note) {
-        notes.add(note)
+    fun addNote(createdNote: NoteRequest): Note? {
+        getNote(createdNote.note.id)?.let {
+            return null
+        }
+        notes.add(createdNote.note)
+        return createdNote.note
     }
 
-    fun deleteNote(id: Int) {
-        val note = notes.find { it.id == id }
+
+    fun deleteNote(deletedNote: NoteRequest): NoteResponse {
+        val note = notes.find { note ->
+            note.id == deletedNote.note.id
+        }
         if (note != null) {
             notes.remove(note)
+            return NoteResponse.OnSuccess(note = note)
         }
+        return NoteResponse.OnFailure(errMsg = "Note with ID ${deletedNote.note.id} not found.")
     }
 
-    fun update(id: Int, newNote: Note) {
-        val index = notes.indexOfFirst { it.id == id }
+    fun updateNote(newNote: NoteRequest) :NoteResponse {
+        val index = notes.indexOfFirst { note -> note.id == newNote.note.id }
         if (index != -1) {
-            notes[index] = newNote
+            notes[index] = notes[index].copy(title = newNote.note.title, description = newNote.note.description)
+            return NoteResponse.OnSuccess(notes[index])
         }
+        return NoteResponse.OnFailure("Note with ID ${newNote.note.id} not found.")
     }
 }
